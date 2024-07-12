@@ -11,13 +11,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/shared/ui/tooltip";
-import { useModal, useModalActions } from "@/shared/modal";
+import { useHintMode, useModal, useModalActions } from "@/shared/modal";
 import { Shortcut } from "@/shared/ui/shortcut";
 
 type TimerMode = "focus" | "break";
 export function Timer() {
   const [mode, setMode] = useState<TimerMode>("focus");
-  const modal = useModal();
+  const hintMode = useHintMode();
 
   useHotkeys([
     [
@@ -35,7 +35,7 @@ export function Timer() {
       <div className="pb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h1 className="text-xl font-bold">Countdown</h1>
-          <Tooltip open={modal === "hint"}>
+          <Tooltip open={hintMode}>
             <TooltipTrigger>
               <TabsList tabIndex={-1} className="h-8">
                 <TabsTrigger tabIndex={-1} className="h-6" value="focus">
@@ -150,7 +150,7 @@ function useSendNotfication(props: { title: string }) {
 
 function CountdownTimer(props: ReturnType<typeof useCountdownTimer>) {
   const { actions, status, seconds } = props;
-  const modal = useModal();
+  const hintMode = useHintMode();
   const formatted = {
     seconds: (seconds % 60).toString().padStart(2, "0"),
     minutes: Math.floor(seconds / 60)
@@ -165,7 +165,7 @@ function CountdownTimer(props: ReturnType<typeof useCountdownTimer>) {
       </p>
       <div className="flex items-center ml-3">
         {status === "running" && (
-          <Tooltip open={modal === "hint"}>
+          <Tooltip open={hintMode}>
             <TooltipTrigger>
               <Button
                 tabIndex={-1}
@@ -183,7 +183,7 @@ function CountdownTimer(props: ReturnType<typeof useCountdownTimer>) {
           </Tooltip>
         )}
         {(status === "paused" || status === "idle") && (
-          <Tooltip open={modal === "hint"}>
+          <Tooltip open={hintMode}>
             <TooltipTrigger>
               <Button
                 tabIndex={-1}
@@ -200,7 +200,7 @@ function CountdownTimer(props: ReturnType<typeof useCountdownTimer>) {
             </TooltipContent>
           </Tooltip>
         )}
-        <Tooltip open={modal === "hint"}>
+        <Tooltip open={hintMode}>
           <TooltipTrigger>
             <Button
               tabIndex={-1}

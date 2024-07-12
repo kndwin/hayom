@@ -32,7 +32,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/shared/ui/tooltip";
-import { useModal } from "@/shared/modal";
+import { useHintMode, useModal } from "@/shared/modal";
 import { Shortcut } from "@/shared/ui/shortcut";
 import { Input } from "@/shared/ui/input";
 import { Switch } from "@/shared/ui/switch";
@@ -43,8 +43,12 @@ import { cn } from "@/shared/ui/util";
 
 export function Todos() {
   const modal = useModal();
+  const hintMode = useHintMode();
   const todos = useAllTodos();
   const completedTodos = todos.filter((todo) => todo.isCompleted);
+  const completedFocusedTodos = completedTodos.filter(
+    (t) => t.isFocused && t.isCompleted
+  );
 
   const [viewListMode, setViewListMode] = useState<"default" | "completedLast">(
     "default"
@@ -63,7 +67,7 @@ export function Todos() {
 
   const progressInPercentage = {
     all: (completedTodos.length / todos.length) * 100,
-    focused: (focusedTodos.length / todos.length) * 100,
+    focused: (completedFocusedTodos.length / focusedTodos.length) * 100,
   };
 
   const [tab, setTab] = useState<"all" | "focused">("all");
@@ -101,7 +105,7 @@ export function Todos() {
       <div className="pb-2 flex items-center justify-between">
         <h1 className="text-xl font-bold">Todo</h1>
         <div className="flex items-center gap-1">
-          <Tooltip open={modal === "hint"}>
+          <Tooltip open={hintMode}>
             <TooltipTrigger tabIndex={-1}>
               <Button
                 size="icon"
@@ -130,7 +134,7 @@ export function Todos() {
               </Shortcut>
             </TooltipContent>
           </Tooltip>
-          <Tooltip open={modal === "hint"}>
+          <Tooltip open={hintMode}>
             <TooltipTrigger tabIndex={-1}>
               <TabsList tabIndex={-1} defaultValue="all">
                 <TabsTrigger tabIndex={-1} value="all">
@@ -153,10 +157,13 @@ export function Todos() {
         </div>
       </div>
       <div className="flex flex-col gap-3">
-        {modal === "focused" && (
-          <Progress value={progressInPercentage.focused} />
-        )}
-        {modal === "idle" && <Progress value={progressInPercentage.all} />}
+        <Progress
+          value={
+            tab === "all"
+              ? progressInPercentage.all
+              : progressInPercentage.focused
+          }
+        />
         <AddTodo />
         <TabsContent className="mt-0" tabIndex={-1} value="all">
           <TodoList key={`all`} todos={collatedTodos} />
@@ -244,6 +251,7 @@ function AlertDialogDeleteTodo(props: {
 }
 
 function AddTodo() {
+  const hintMode = useHintMode();
   const modal = useModal();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [withFocused, setWithFocused] = useState(false);
@@ -298,7 +306,7 @@ function AddTodo() {
 
   return (
     <div className="flex items-center gap-2">
-      <Tooltip open={modal === "hint"}>
+      <Tooltip open={hintMode}>
         <TooltipTrigger asChild>
           <Textarea
             disabled={modal === "focused"}
@@ -319,7 +327,7 @@ function AddTodo() {
           </div>
         </TooltipContent>
       </Tooltip>
-      <Tooltip open={modal === "hint" && active}>
+      <Tooltip open={hintMode && active}>
         <TooltipTrigger tabIndex={-1}>
           <Switch
             disabled={modal === "focused"}
@@ -415,7 +423,7 @@ const TodoItem = forwardRef<
   const [active, setActive] = useState(false);
   const { remove, update } = useTodoActions();
   const [mode, setMode] = useState<"view" | "edit">("view");
-  const modal = useModal();
+  const hintMode = useHintMode();
 
   function executeIfActive(fn: () => void) {
     if (active) {
@@ -498,7 +506,7 @@ const TodoItem = forwardRef<
       onBlur={() => setActive(false)}
       className="w-full py-1 flex items-center justify-start gap-2 focus:bg-muted focus:outline-none rounded px-2 focus-within:bg-muted"
     >
-      <Tooltip open={modal === "hint"}>
+      <Tooltip open={hintMode}>
         <TooltipTrigger />
         <TooltipContent
           side="left"
@@ -509,7 +517,7 @@ const TodoItem = forwardRef<
           <Shortcut>{index}</Shortcut>
         </TooltipContent>
       </Tooltip>
-      <Tooltip open={modal === "hint" && active}>
+      <Tooltip open={hintMode && active}>
         <div className="flex flex-col">
           <Checkbox
             onCheckedChange={toggleCompleted}
@@ -524,7 +532,7 @@ const TodoItem = forwardRef<
         </TooltipContent>
       </Tooltip>
       {mode === "view" && (
-        <Tooltip open={modal === "hint" && active}>
+        <Tooltip open={hintMode && active}>
           <TooltipTrigger asChild>
             <span className="text-sm w-full">{todo.title}</span>
           </TooltipTrigger>
@@ -538,7 +546,7 @@ const TodoItem = forwardRef<
         </Tooltip>
       )}
       {mode === "edit" && (
-        <Tooltip open={modal === "hint" && active}>
+        <Tooltip open={hintMode && active}>
           <TooltipTrigger asChild>
             <Input
               autoFocus
@@ -557,7 +565,7 @@ const TodoItem = forwardRef<
           </TooltipContent>
         </Tooltip>
       )}
-      <Tooltip open={modal === "hint" && active && mode === "view"}>
+      <Tooltip open={hintMode && active && mode === "view"}>
         <TooltipTrigger>
           {todo.isFocused ? (
             <CircleIcon className="w-4 h-4 stroke-muted-foreground" />
