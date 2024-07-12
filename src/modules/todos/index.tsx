@@ -49,9 +49,7 @@ export function Todos() {
     "default"
   );
 
-  function sortTodoList(a: (typeof todos)[number], b: (typeof todos)[number]) {
-    // need to use for typescript
-    console.log({ b });
+  function sortTodoList(a: (typeof todos)[number]) {
     if (viewListMode === "completedLast") {
       return a.isCompleted ? 1 : -1;
     }
@@ -304,7 +302,7 @@ function AddTodo() {
             {active && (
               <div>
                 <Shortcut>ctrl+c</Shortcut>
-                <span className="ml-3">Escape new todo</span>
+                <span className="ml-3">Escape</span>
               </div>
             )}
           </div>
@@ -404,7 +402,6 @@ const TodoItem = forwardRef<
   const { remove, update } = useTodoActions();
   const [mode, setMode] = useState<"view" | "edit">("view");
   const modal = useModal();
-  const inputRef = useRef<HTMLInputElement>(null);
 
   function executeIfActive(fn: () => void) {
     if (active) {
@@ -418,7 +415,6 @@ const TodoItem = forwardRef<
 
   function toggleViewEdit() {
     setMode(mode === "view" ? "edit" : "view");
-    inputRef.current?.focus();
   }
 
   function toggleCompleted() {
@@ -428,20 +424,56 @@ const TodoItem = forwardRef<
     });
   }
 
-  function focus() {
+  function updateFocus() {
     update({
       id: todo.id,
       isFocused: cast(!todo.isFocused),
     });
   }
 
+  function handleTextareaKeypress(e: React.KeyboardEvent<HTMLInputElement>) {
+    const supportedKeys = ["Enter"] as const;
+    const key = e.key as (typeof supportedKeys)[number]; // type cast and fail it out
+    const match = E.Match.type<typeof key>().pipe(
+      E.Match.when("Enter", () => {
+        const parseTitle = S.decodeUnknownEither(NonEmptyString1000)(
+          e.currentTarget.value
+        );
+        if (parseTitle._op === "Right") {
+          const title = parseTitle.right;
+          update({ id: todo.id, title });
+          toggleViewEdit();
+        }
+      }),
+      E.Match.exhaustive
+    );
+
+    if (supportedKeys.includes(key)) {
+      e.preventDefault();
+      match(key);
+    }
+  }
+
   useHotkeys([
     ["d", () => executeIfActive(removeTodo)],
     ["x", () => executeIfActive(toggleCompleted)],
-    ["f", () => executeIfActive(focus)],
+    ["f", () => executeIfActive(updateFocus)],
     ["e", () => executeIfActive(toggleViewEdit)],
     [`${index}`, toggleCompleted],
   ]);
+
+  useHotkeys(
+    [
+      [
+        "ctrl+c",
+        () =>
+          executeIfActive(() => {
+            setMode("view");
+          }),
+      ],
+    ],
+    []
+  );
 
   return (
     <a
@@ -450,19 +482,16 @@ const TodoItem = forwardRef<
       key={todo.id}
       onFocus={() => setActive(true)}
       onBlur={() => setActive(false)}
-      className="w-full py-1 flex items-center justify-start gap-2 focus:bg-muted focus:outline-none rounded px-2"
+      className="w-full py-1 flex items-center justify-start gap-2 focus:bg-muted focus:outline-none rounded px-2 focus-within:bg-muted"
     >
       <Tooltip open={modal === "hint"}>
-        <TooltipTrigger asChild>
-          <div>{modal === "hint" && <Shortcut>{index}</Shortcut>}</div>
-        </TooltipTrigger>
+        <TooltipTrigger />
         <TooltipContent
-          side="top"
+          side="left"
           className={cn(tooltipCn, "w-fit px-2 pt-0 pb-0 items-center h-fit")}
         >
           <TooltipArrow />
           <Shortcut>{index}</Shortcut>
-          <span className="ml-3 text-xs leading-none">Check</span>
         </TooltipContent>
       </Tooltip>
       <Tooltip open={modal === "hint" && active}>
@@ -504,28 +533,25 @@ const TodoItem = forwardRef<
         </Tooltip>
       )}
       {mode === "edit" && (
-        <Input
-          ref={inputRef}
-          autoFocus
-          className="h-6 text-sm px-1 rounded"
-          onBlur={toggleViewEdit}
-          onKeyPress={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              const parseTitle = S.decodeUnknownEither(NonEmptyString1000)(
-                e.currentTarget.value
-              );
-
-              if (parseTitle._op === "Right") {
-                const title = parseTitle.right;
-                update({ id: todo.id, title });
-                toggleViewEdit();
-              }
-            }
-          }}
-          type="text"
-          defaultValue={todo.title ?? ""}
-        />
+        <Tooltip open={modal === "hint" && active}>
+          <TooltipTrigger asChild>
+            <Input
+              autoFocus
+              className="h-6 text-sm px-1 rounded"
+              onBlur={toggleViewEdit}
+              onKeyPress={handleTextareaKeypress}
+              type="text"
+              defaultValue={todo.title ?? ""}
+            />
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            <TooltipArrow />
+            <div>
+              <Shortcut>ctrl+c</Shortcut>
+              <span className="ml-3">Escape</span>
+            </div>
+          </TooltipContent>
+        </Tooltip>
       )}
       <Tooltip open={modal === "hint" && active}>
         <TooltipTrigger asChild>

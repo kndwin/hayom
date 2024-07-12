@@ -10,7 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@effect/platform": "^0.58.26",
     "@effect/schema": "^0.68.17",
+    "@evolu/common": "^5.2.3",
+    "@evolu/common-react": "^8.0.5",
+    "@evolu/common-web": "^8.1.1",
     "@evolu/react": "latest",
     "@radix-ui/react-alert-dialog": "^1.1.1",
     "@radix-ui/react-checkbox": "^1.1.1",
@@ -24,6 +28,7 @@
     "@radix-ui/react-switch": "^1.1.0",
     "@radix-ui/react-tabs": "^1.1.0",
     "@radix-ui/react-tooltip": "^1.1.2",
+    "@sqlite.org/sqlite-wasm": "^3.46.0-build2",
     "@xstate/store": "^1.0.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
