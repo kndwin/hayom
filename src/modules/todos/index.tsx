@@ -219,7 +219,10 @@ function AlertDialogDeleteTodo(props: {
               type === "completed" ? isCompleted : true
             )
             .map((t) => (
-              <li className="text-sm leading-none text-muted-foreground">
+              <li
+                key={t.id}
+                className="text-sm leading-none text-muted-foreground"
+              >
                 {t.title}
               </li>
             ))}
@@ -534,7 +537,14 @@ const TodoItem = forwardRef<
       {mode === "view" && (
         <Tooltip open={hintMode && active}>
           <TooltipTrigger asChild>
-            <span className="text-sm w-full">{todo.title}</span>
+            <span
+              className={cn(
+                "text-sm w-full",
+                todo.isCompleted && "line-through text-muted-foreground"
+              )}
+            >
+              {todo.title}
+            </span>
           </TooltipTrigger>
           <TooltipContent side="bottom">
             <TooltipArrow />
@@ -566,9 +576,16 @@ const TodoItem = forwardRef<
         </Tooltip>
       )}
       <Tooltip open={hintMode && active && mode === "view"}>
-        <TooltipTrigger>
+        <TooltipTrigger className="text-muted-foreground">
           {todo.isFocused ? (
-            <CircleIcon className="w-4 h-4 stroke-muted-foreground" />
+            <div
+              className={cn(
+                "w-3 h-3 rounded-full",
+                todo.isCompleted
+                  ? "bg-muted-foreground"
+                  : "border-muted-foreground border-2"
+              )}
+            />
           ) : null}
         </TooltipTrigger>
         <TooltipContent side="bottom">

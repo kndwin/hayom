@@ -13,6 +13,7 @@ import {
 } from "@/shared/ui/tooltip";
 import { useHintMode, useModal, useModalActions } from "@/shared/modal";
 import { Shortcut } from "@/shared/ui/shortcut";
+import { SettingsDialog, useInitialFocusTimeInMinutes } from "../settings";
 
 type TimerMode = "focus" | "break";
 export function Timer() {
@@ -33,7 +34,7 @@ export function Timer() {
       className="flex flex-col"
     >
       <div className="pb-2 flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full">
           <h1 className="text-xl font-bold">Countdown</h1>
           <Tooltip open={hintMode}>
             <TooltipTrigger>
@@ -55,6 +56,9 @@ export function Timer() {
               </Shortcut>
             </TooltipContent>
           </Tooltip>
+          <div className="ml-auto">
+            <SettingsDialog />
+          </div>
         </div>
       </div>
       <div className={mode === "focus" ? "flex" : "hidden"}>
@@ -99,22 +103,14 @@ function BreakTimer(props: { active: boolean }) {
 
 function FocusTimer(props: { active: boolean }) {
   const { focus, escape } = useModalActions();
+  const initialTimeInMinutes = useInitialFocusTimeInMinutes();
   const modal = useModal();
-  const [initialTimeInSeconds] = useState(25 * 60);
-  const sendNotifcation = useSendNotfication({
-    title: "Focus time over",
-  });
+  const sendNotifcation = useSendNotfication({ title: "Focus time over" });
   const countdownTimer = useCountdownTimer({
-    initialTimeInSeconds,
+    initialTimeInSeconds: initialTimeInMinutes * 60,
     onFinished: () => sendNotifcation(),
-    onPlay: () => {
-      console.log("Play");
-      focus();
-    },
-    onPause: () => {
-      console.log("Paused");
-      escape();
-    },
+    onPlay: focus,
+    onPause: escape,
   });
 
   function togglePlayPause() {
@@ -242,7 +238,12 @@ function useCountdownTimer({
     "idle" | "running" | "paused" | "finished"
   >("idle");
 
-  const [seconds, setSeconds] = useState(initialTimeInSeconds);
+  const initialSeconds = Number.isNaN(initialTimeInSeconds)
+    ? 0
+    : initialTimeInSeconds;
+  const [seconds, setSeconds] = useState(initialSeconds);
+
+  useEffect(() => setSeconds(initialSeconds), [initialSeconds]);
 
   useInterval(
     () => {
