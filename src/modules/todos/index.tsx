@@ -404,6 +404,7 @@ function TodoList({ todos }: { todos: ReturnType<typeof useAllTodos> }) {
               key={`${todo.id}`}
               todo={todo}
               ref={(element) => (refs.current[index] = element)}
+              focus={() => refs.current[index]?.focus()}
             />
           )),
       })}
@@ -416,8 +417,9 @@ const TodoItem = forwardRef<
   {
     todo: ReturnType<typeof useAllTodos>[number];
     index: number;
+    focus: () => void;
   }
->(({ todo, index }, ref) => {
+>(({ todo, index, focus }, ref) => {
   const [active, setActive] = useState(false);
   const { remove, update } = useTodoActions();
   const [mode, setMode] = useState<"view" | "edit">("view");
@@ -479,7 +481,7 @@ const TodoItem = forwardRef<
     ["x", () => executeIfActive(toggleCompleted)],
     ["f", () => executeIfActive(updateFocus)],
     ["e", () => executeIfActive(toggleViewEdit)],
-    [`${index}`, toggleCompleted],
+    [`${index}`, () => focus()],
   ]);
 
   useHotkeys(
