@@ -1,6 +1,7 @@
 import { Timer } from "./modules/timer";
 import { Todos } from "./modules/todos";
 import { useHotkeys } from "./shared/hooks/use-hotkeys";
+import { Logo } from "./shared/icons/logo";
 import { useHintMode, useModalActions } from "./shared/modal";
 import { Shortcut } from "./shared/ui/shortcut";
 
@@ -20,17 +21,25 @@ function App() {
         <Timer />
         <Todos />
       </main>
-      <div className=" absolute bottom-4 right-4 rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground">
-        {`Press `}
-        <Shortcut>h</Shortcut>
-        {` to see hints`}
+      <div className="absolute bottom-4 right-4">
+        <Logo />
       </div>
-      {hintMode && (
-        <div className="absolute bottom-4 left-4 rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground flex flex-col gap-1">
-          <Shortcut hint="Delete todos">shift + d</Shortcut>
-          <Shortcut hint="Escape">ctrl + c</Shortcut>
-        </div>
-      )}
+      <div className="absolute bottom-4 left-4 rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground flex flex-col gap-1">
+        {!hintMode && (
+          <div>
+            {"Press "}
+            <Shortcut>h</Shortcut>
+            {" to show hints"}
+          </div>
+        )}
+        {hintMode && (
+          <>
+            <Shortcut hint="Delete todos">shift + d</Shortcut>
+            <Shortcut hint="Escape">ctrl + c</Shortcut>
+            <Shortcut hint="Hide hints">h</Shortcut>
+          </>
+        )}
+      </div>
     </div>
   );
 }

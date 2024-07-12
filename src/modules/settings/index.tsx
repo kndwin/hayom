@@ -24,6 +24,7 @@ import {
   TooltipTrigger,
 } from "@/shared/ui/tooltip";
 import { useTheme } from "@/shared/providers/theme";
+import { Logo } from "@/shared/icons/logo";
 
 const store = createStore(
   {
@@ -70,7 +71,10 @@ export function SettingsDialog() {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Settings</DialogTitle>
+          <div className="flex gap-2 items-center">
+            <Logo />
+            <DialogTitle>Hayom</DialogTitle>
+          </div>
         </DialogHeader>
         <TimerSettings />
         <ThemeSettings />
