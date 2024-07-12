@@ -14,21 +14,22 @@ import {
 import { useModal } from "@/shared/modal";
 import { Shortcut } from "@/shared/ui/shortcut";
 
+type TimerMode = "focus" | "break";
 export function Timer() {
-  const [type, setType] = useState<"focus" | "break">("focus");
+  const [mode, setMode] = useState<TimerMode>("focus");
   const modal = useModal();
 
   useHotkeys([
     [
       "shift+t",
-      () => setType((prev) => (prev === "focus" ? "break" : "focus")),
+      () => setMode((prev) => (prev === "focus" ? "break" : "focus")),
     ],
   ]);
 
   return (
     <Tabs
-      onValueChange={(value) => setType(value)}
-      value={type}
+      onValueChange={(value) => setMode(value as TimerMode)}
+      value={mode}
       className="flex flex-col"
     >
       <div className="pb-2 flex items-center justify-between">
@@ -49,24 +50,24 @@ export function Timer() {
               <TooltipArrow />
               <Shortcut>Shift + t</Shortcut>
               <span className="ml-3">{`Switch to ${
-                type === "focus" ? "break" : "focus"
+                mode === "focus" ? "break" : "focus"
               }`}</span>
             </TooltipContent>
           </Tooltip>
         </div>
       </div>
-      <div className={type === "focus" ? "flex" : "hidden"}>
-        <FocusTimer active={type === "focus"} />
+      <div className={mode === "focus" ? "flex" : "hidden"}>
+        <FocusTimer active={mode === "focus"} />
       </div>
-      <div className={type === "break" ? "flex" : "hidden"}>
-        <BreakTimer active={type === "break"} />
+      <div className={mode === "break" ? "flex" : "hidden"}>
+        <BreakTimer active={mode === "break"} />
       </div>
     </Tabs>
   );
 }
 
 function BreakTimer(props: { active: boolean }) {
-  const [initialTimeInSeconds, setInitialTimeInSeconds] = useState(5 * 60);
+  const [initialTimeInSeconds] = useState(5 * 60);
   const sendNotifcation = useSendNotfication({
     title: "Break time over",
   });
@@ -98,7 +99,7 @@ function BreakTimer(props: { active: boolean }) {
 }
 
 function FocusTimer(props: { active: boolean }) {
-  const [initialTimeInSeconds, setInitialTimeInSeconds] = useState(25 * 60);
+  const [initialTimeInSeconds] = useState(25 * 60);
   const sendNotifcation = useSendNotfication({
     title: "Focus time over",
   });

@@ -1,4 +1,3 @@
-import { Schema as S } from "@effect/schema/Schema";
 import {
   createEvolu,
   NonEmptyString1000,
@@ -41,7 +40,7 @@ const allTodos = evolu.createQuery((db) =>
 );
 
 // Load the query. Batched and cached by default.
-const allTodosPromise = evolu.loadQuery(allTodos);
+evolu.loadQuery(allTodos);
 
 // React Helper Functions
 

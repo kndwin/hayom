@@ -39,7 +39,6 @@ import { Switch } from "@/shared/ui/switch";
 
 import { useAllTodos, useTodoActions } from "./db";
 import { Button } from "@/shared/ui/button";
-import { Popover, PopoverAnchor, PopoverContent } from "@/shared/ui/popover";
 import { cn } from "@/shared/ui/util";
 
 export function Todos() {
@@ -51,6 +50,8 @@ export function Todos() {
   );
 
   function sortTodoList(a: (typeof todos)[number], b: (typeof todos)[number]) {
+    // need to use for typescript
+    console.log({ b });
     if (viewListMode === "completedLast") {
       return a.isCompleted ? 1 : -1;
     }
@@ -156,12 +157,13 @@ export function Todos() {
   );
 }
 
+type DeleteCategories = "all" | "completed";
 function AlertDialogDeleteTodo(props: {
   todos: ReturnType<typeof useAllTodos>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const [type, setType] = useState<"all" | "completed">("completed");
+  const [type, setType] = useState<DeleteCategories>("completed");
   const { remove } = useTodoActions();
   const completedTodos = props.todos.filter((todo) => todo.isCompleted);
   async function deleteAll() {
@@ -200,7 +202,10 @@ function AlertDialogDeleteTodo(props: {
               </li>
             ))}
         </AlertDialogHeader>
-        <RadioGroup value={type} onValueChange={(value) => setType(value)}>
+        <RadioGroup
+          value={type}
+          onValueChange={(value) => setType(value as DeleteCategories)}
+        >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="completed" id="completed" />
             <Label htmlFor="completed">Completed</Label>
