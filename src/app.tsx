@@ -6,17 +6,10 @@ import { Shortcut } from "./shared/ui/shortcut";
 
 function App() {
   const hintMode = useHintMode();
-  const { hint, escape } = useModalActions();
+  const { toggleHint, escape } = useModalActions();
 
-  function toggleHints() {
-    if (hintMode) {
-      escape();
-    } else {
-      hint();
-    }
-  }
   useHotkeys([
-    ["h", toggleHints],
+    ["h", () => toggleHint()],
     ["escape", escape],
     ["ctrl+c", escape],
   ]);

@@ -5,8 +5,8 @@ const modalStore = createStore(
   { modal: "idle" as "idle" | "focused", hint: false },
   {
     MODAL_FOCUS: { modal: "focused" },
-    MODAL_ESCAPE: { modal: "idle", hint: false },
-    MODAL_HINT: { hint: true },
+    MODAL_ESCAPE: { modal: "idle" },
+    TOGGLE_HINT: (prev) => ({ hint: !prev.hint }),
   }
 );
 
@@ -25,6 +25,6 @@ export const useModalActions = () => {
   return {
     focus: () => send({ type: "MODAL_FOCUS" }),
     escape: () => send({ type: "MODAL_ESCAPE" }),
-    hint: () => send({ type: "MODAL_HINT" }),
+    toggleHint: () => send({ type: "TOGGLE_HINT" }),
   };
 };
