@@ -1,7 +1,6 @@
 import * as S from "@effect/schema/Schema";
 import { Progress } from "@/shared/ui/progress";
 import {
-  CircleIcon,
   ValueNoneIcon,
   SewingPinIcon,
   SewingPinFilledIcon,
@@ -507,6 +506,9 @@ const TodoItem = forwardRef<
       key={todo.id}
       onFocus={() => setActive(true)}
       onBlur={() => setActive(false)}
+      onClick={() => {
+        toggleCompleted();
+      }}
       className="w-full py-1 flex items-center justify-start gap-2 focus:bg-muted focus:outline-none rounded px-2 focus-within:bg-muted"
     >
       <Tooltip open={hintMode}>
