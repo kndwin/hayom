@@ -99,6 +99,7 @@ function BreakTimer(props: { active: boolean }) {
 
 function FocusTimer(props: { active: boolean }) {
   const { focus, escape } = useModalActions();
+  const modal = useModal();
   const [initialTimeInSeconds] = useState(25 * 60);
   const sendNotifcation = useSendNotfication({
     title: "Focus time over",
@@ -132,6 +133,11 @@ function FocusTimer(props: { active: boolean }) {
 
   useHotkeys([["p", togglePlayPause]]);
   useHotkeys([["r", reset]]);
+  useEffect(() => {
+    if (modal === "idle") {
+      countdownTimer.actions.pause();
+    }
+  }, [modal, countdownTimer.actions]);
 
   return <CountdownTimer key="focus-timer" {...countdownTimer} />;
 }

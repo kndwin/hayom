@@ -89,8 +89,6 @@ export function Todos() {
   useEffect(() => {
     if (modal === "focused") {
       setTab("focused");
-    } else if (modal === "idle") {
-      setTab("all");
     }
   }, [modal]);
 
