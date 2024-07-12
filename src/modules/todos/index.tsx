@@ -7,7 +7,7 @@ import {
   SewingPinFilledIcon,
 } from "@radix-ui/react-icons";
 import * as E from "effect";
-import { forwardRef, useRef, useState } from "react";
+import { forwardRef, useEffect, useRef, useState } from "react";
 import { cast, NonEmptyString1000 } from "@evolu/react";
 
 import { Textarea } from "@/shared/ui/textarea";
@@ -42,6 +42,7 @@ import { Button } from "@/shared/ui/button";
 import { cn } from "@/shared/ui/util";
 
 export function Todos() {
+  const modal = useModal();
   const todos = useAllTodos();
   const completedTodos = todos.filter((todo) => todo.isCompleted);
 
@@ -60,8 +61,10 @@ export function Todos() {
     .filter((todo) => todo.isFocused)
     .sort(sortTodoList);
 
-  const progressInPercentage = (completedTodos.length / todos.length) * 100;
-  const modal = useModal();
+  const progressInPercentage = {
+    all: (completedTodos.length / todos.length) * 100,
+    focused: (focusedTodos.length / todos.length) * 100,
+  };
 
   const [tab, setTab] = useState<"all" | "focused">("all");
   const [openDeleteAll, setOpenDeleteAll] = useState(false);
@@ -78,6 +81,14 @@ export function Todos() {
   function deleteAll() {
     setOpenDeleteAll(true);
   }
+
+  useEffect(() => {
+    if (modal === "focused") {
+      setTab("focused");
+    } else if (modal === "idle") {
+      setTab("all");
+    }
+  }, [modal]);
 
   useHotkeys([
     ["t", switchTabs],
@@ -108,11 +119,15 @@ export function Todos() {
             </TooltipTrigger>
             <TooltipContent side="bottom">
               <TooltipArrow />
-              <Shortcut>v</Shortcut>
-              <span className="ml-3">
-                Toggle view to
-                {viewListMode === "default" ? "completed last" : "default"}
-              </span>
+              <Shortcut
+                hint={
+                  viewListMode === "default"
+                    ? "Switch to move completed last"
+                    : "Switch to default"
+                }
+              >
+                v
+              </Shortcut>
             </TooltipContent>
           </Tooltip>
           <Tooltip open={modal === "hint"}>
@@ -128,22 +143,26 @@ export function Todos() {
             </TooltipTrigger>
             <TooltipContent side="top">
               <TooltipArrow />
-              <Shortcut>t</Shortcut>
-              <span className="ml-3">
-                Switch to {tab === "all" ? "focused" : "all"} todos
-              </span>
+              <Shortcut
+                hint={`Switch to ${tab === "all" ? "focused" : "all"} todos`}
+              >
+                t
+              </Shortcut>
             </TooltipContent>
           </Tooltip>
         </div>
       </div>
-      <div className="flex flex-col gap-2">
-        <Progress value={progressInPercentage} />
+      <div className="flex flex-col gap-3">
+        {modal === "focused" && (
+          <Progress value={progressInPercentage.focused} />
+        )}
+        {modal === "idle" && <Progress value={progressInPercentage.all} />}
         <AddTodo />
-        <TabsContent tabIndex={-1} value="all">
-          <TodoList todos={collatedTodos} />
+        <TabsContent className="mt-0" tabIndex={-1} value="all">
+          <TodoList key={`all`} todos={collatedTodos} />
         </TabsContent>
-        <TabsContent tabIndex={-1} value="focused">
-          <TodoList todos={focusedTodos} />
+        <TabsContent className="mt-0" tabIndex={-1} value="focused">
+          <TodoList key={`focused`} todos={focusedTodos} />
         </TabsContent>
       </div>
       <AlertDialogDeleteTodo
@@ -278,10 +297,12 @@ function AddTodo() {
   );
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-2">
       <Tooltip open={modal === "hint"}>
         <TooltipTrigger asChild>
           <Textarea
+            disabled={modal === "focused"}
+            className="text-sm py-1"
             tabIndex={-1}
             onKeyPress={handleTextareaKeypress}
             ref={textareaRef}
@@ -293,31 +314,24 @@ function AddTodo() {
         <TooltipContent side="bottom">
           <TooltipArrow />
           <div className="flex flex-col gap-1">
-            {!active && (
-              <div>
-                <Shortcut>c</Shortcut>
-                <span className="ml-3">Create new todo</span>
-              </div>
-            )}
-            {active && (
-              <div>
-                <Shortcut>ctrl+c</Shortcut>
-                <span className="ml-3">Escape</span>
-              </div>
-            )}
+            {!active && <Shortcut hint="Create new todo">c</Shortcut>}
+            {active && <Shortcut hint="Escape">ctrl+c</Shortcut>}
           </div>
         </TooltipContent>
       </Tooltip>
       <Tooltip open={modal === "hint" && active}>
         <TooltipTrigger tabIndex={-1}>
-          <Switch checked={withFocused} onCheckedChange={setWithFocused} />
+          <Switch
+            disabled={modal === "focused"}
+            checked={withFocused}
+            onCheckedChange={setWithFocused}
+          />
         </TooltipTrigger>
         <TooltipContent side="bottom">
           <TooltipArrow />
-          <Shortcut>ctrl + f</Shortcut>
-          <span className="ml-3">
-            {withFocused ? "without focus" : "with focus"}
-          </span>
+          <Shortcut hint={withFocused ? "without focus" : "with focus"}>
+            ctrl + f
+          </Shortcut>
         </TooltipContent>
       </Tooltip>
     </div>
@@ -381,7 +395,7 @@ function TodoList({ todos }: { todos: ReturnType<typeof useAllTodos> }) {
           todos.map((todo, index) => (
             <TodoItem
               index={index}
-              key={todo.id}
+              key={`${todo.id}`}
               todo={todo}
               ref={(element) => (refs.current[index] = element)}
             />
@@ -488,6 +502,7 @@ const TodoItem = forwardRef<
         <TooltipTrigger />
         <TooltipContent
           side="left"
+          sideOffset={0}
           className={cn(tooltipCn, "w-fit px-2 pt-0 pb-0 items-center h-fit")}
         >
           <TooltipArrow />
@@ -504,12 +519,8 @@ const TodoItem = forwardRef<
           <TooltipTrigger></TooltipTrigger>
         </div>
         <TooltipContent side="bottom">
-          <Shortcut>x</Shortcut>
           <TooltipArrow />
-          <span className="ml-3">
-            {todo.isCompleted ? "Revert" : "Complete"}
-            {" todo"}
-          </span>
+          <Shortcut hint={todo.isCompleted ? "Revert" : "Complete"}>x</Shortcut>
         </TooltipContent>
       </Tooltip>
       {mode === "view" && (
@@ -520,14 +531,8 @@ const TodoItem = forwardRef<
           <TooltipContent side="bottom">
             <TooltipArrow />
             <div className="flex flex-col gap-1 items-start">
-              <div className="flex">
-                <Shortcut>e</Shortcut>
-                <span className="ml-3">Edit</span>
-              </div>
-              <div className="flex">
-                <Shortcut>d</Shortcut>
-                <span className="ml-3">Remove</span>
-              </div>
+              <Shortcut hint="Edit">e</Shortcut>
+              <Shortcut hint="Delete">d</Shortcut>
             </div>
           </TooltipContent>
         </Tooltip>
@@ -547,25 +552,20 @@ const TodoItem = forwardRef<
           <TooltipContent side="bottom">
             <TooltipArrow />
             <div>
-              <Shortcut>ctrl+c</Shortcut>
-              <span className="ml-3">Escape</span>
+              <Shortcut hint="Escape">ctrl+c</Shortcut>
             </div>
           </TooltipContent>
         </Tooltip>
       )}
-      <Tooltip open={modal === "hint" && active}>
-        <TooltipTrigger asChild>
+      <Tooltip open={modal === "hint" && active && mode === "view"}>
+        <TooltipTrigger>
           {todo.isFocused ? (
             <CircleIcon className="w-4 h-4 stroke-muted-foreground" />
           ) : null}
         </TooltipTrigger>
         <TooltipContent side="bottom">
-          <Shortcut>f</Shortcut>
           <TooltipArrow />
-          <span className="ml-3">
-            {todo.isFocused ? "Unfocus" : "Focus"}
-            {" todo"}
-          </span>
+          <Shortcut hint={todo.isFocused ? "Unfocus" : "Focus"}>f</Shortcut>
         </TooltipContent>
       </Tooltip>
     </a>

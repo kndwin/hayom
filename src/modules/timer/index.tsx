@@ -11,7 +11,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/shared/ui/tooltip";
-import { useModal } from "@/shared/modal";
+import { useModal, useModalActions } from "@/shared/modal";
 import { Shortcut } from "@/shared/ui/shortcut";
 
 type TimerMode = "focus" | "break";
@@ -48,10 +48,11 @@ export function Timer() {
             </TooltipTrigger>
             <TooltipContent side="right">
               <TooltipArrow />
-              <Shortcut>Shift + t</Shortcut>
-              <span className="ml-3">{`Switch to ${
-                mode === "focus" ? "break" : "focus"
-              }`}</span>
+              <Shortcut
+                hint={`Switch to ${mode === "focus" ? "break" : "focus"}`}
+              >
+                Shift + t
+              </Shortcut>
             </TooltipContent>
           </Tooltip>
         </div>
@@ -73,9 +74,7 @@ function BreakTimer(props: { active: boolean }) {
   });
   const countdownTimer = useCountdownTimer({
     initialTimeInSeconds,
-    onFinished: () => {
-      sendNotifcation();
-    },
+    onFinished: () => sendNotifcation(),
   });
 
   function togglePlayPause() {
@@ -95,18 +94,25 @@ function BreakTimer(props: { active: boolean }) {
   useHotkeys([["p", togglePlayPause]]);
   useHotkeys([["r", reset]]);
 
-  return <CountdownTimer {...countdownTimer} />;
+  return <CountdownTimer key="break-timer" {...countdownTimer} />;
 }
 
 function FocusTimer(props: { active: boolean }) {
+  const { focus, escape } = useModalActions();
   const [initialTimeInSeconds] = useState(25 * 60);
   const sendNotifcation = useSendNotfication({
     title: "Focus time over",
   });
   const countdownTimer = useCountdownTimer({
     initialTimeInSeconds,
-    onFinished: () => {
-      sendNotifcation();
+    onFinished: () => sendNotifcation(),
+    onPlay: () => {
+      console.log("Play");
+      focus();
+    },
+    onPause: () => {
+      console.log("Paused");
+      escape();
     },
   });
 
@@ -127,7 +133,7 @@ function FocusTimer(props: { active: boolean }) {
   useHotkeys([["p", togglePlayPause]]);
   useHotkeys([["r", reset]]);
 
-  return <CountdownTimer {...countdownTimer} />;
+  return <CountdownTimer key="focus-timer" {...countdownTimer} />;
 }
 
 function useSendNotfication(props: { title: string }) {
@@ -172,8 +178,7 @@ function CountdownTimer(props: ReturnType<typeof useCountdownTimer>) {
             </TooltipTrigger>
             <TooltipContent side="bottom">
               <TooltipArrow />
-              <Shortcut>p</Shortcut>
-              <span className="ml-3">Pause countdown</span>
+              <Shortcut hint="Pause countdown">p</Shortcut>
             </TooltipContent>
           </Tooltip>
         )}
@@ -191,8 +196,7 @@ function CountdownTimer(props: ReturnType<typeof useCountdownTimer>) {
             </TooltipTrigger>
             <TooltipContent side="bottom" sideOffset={-2}>
               <TooltipArrow />
-              <Shortcut>p</Shortcut>
-              <span className="ml-3">Start countdown</span>
+              <Shortcut hint="Start countdown">p</Shortcut>
             </TooltipContent>
           </Tooltip>
         )}
@@ -209,8 +213,7 @@ function CountdownTimer(props: ReturnType<typeof useCountdownTimer>) {
           </TooltipTrigger>
           <TooltipContent side="right">
             <TooltipArrow />
-            <Shortcut>r</Shortcut>
-            <span className="ml-3">Reset timer</span>
+            <Shortcut hint="Reset countdown">r</Shortcut>
           </TooltipContent>
         </Tooltip>
       </div>
@@ -221,9 +224,13 @@ function CountdownTimer(props: ReturnType<typeof useCountdownTimer>) {
 function useCountdownTimer({
   initialTimeInSeconds,
   onFinished = () => {},
+  onPlay = () => {},
+  onPause = () => {},
 }: {
   initialTimeInSeconds: number;
   onFinished?: () => void;
+  onPlay?: () => void;
+  onPause?: () => void;
 }) {
   const [status, setStatus] = useState<
     "idle" | "running" | "paused" | "finished"
@@ -253,8 +260,14 @@ function useCountdownTimer({
     seconds,
     status,
     actions: {
-      play: () => setStatus("running"),
-      pause: () => setStatus("paused"),
+      play: () => {
+        setStatus("running");
+        onPlay();
+      },
+      pause: () => {
+        setStatus("paused");
+        onPause();
+      },
       reset: () => {
         setSeconds(initialTimeInSeconds);
         setStatus("idle");
@@ -262,8 +275,10 @@ function useCountdownTimer({
       toggle: () => {
         if (status === "running") {
           setStatus("paused");
+          onPause();
         } else {
           setStatus("running");
+          onPlay();
         }
       },
     },

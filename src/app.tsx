@@ -33,14 +33,8 @@ function App() {
       </div>
       {modal === "hint" && (
         <div className="absolute bottom-4 left-4 rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground flex flex-col gap-1">
-          <div>
-            <Shortcut>shift + d</Shortcut>
-            Delete todos
-          </div>
-          <div>
-            <Shortcut>ctrl + c</Shortcut>
-            Escape
-          </div>
+          <Shortcut hint="Delete todos">shift + d</Shortcut>
+          <Shortcut hint="Escape">ctrl + c</Shortcut>
         </div>
       )}
     </div>
