@@ -25,9 +25,8 @@ export default defineConfig({
 
 		includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
 		manifest: {
-			name: 'My Awesome App',
-			short_name: 'MyApp',
-			description: 'My Awesome App description',
+			name: 'hayom',
+			description: 'todos at the speed of thought',
 			theme_color: '#ffffff',
 			icons: [
 				{
