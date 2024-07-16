@@ -37,7 +37,7 @@ export function ThemeProvider({
 		root.classList.remove("light", "dark");
 
 		if (pwaTheme) {
-			pwaTheme.setAttribute('content', _theme === "dark" ? "#000000" : "#ffffff")
+			pwaTheme.setAttribute('content', _theme === "dark" ? "#e7e5e4" : "#10100f")
 		}
 		root.classList.add(_theme);
 	}
