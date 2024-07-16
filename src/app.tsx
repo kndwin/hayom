@@ -1,4 +1,3 @@
-import { } from "@radix-ui/react-hover-card";
 import { Timer } from "./modules/timer";
 import { Todos } from "./modules/todos";
 import { useHotkeys } from "./shared/hooks/use-hotkeys";
@@ -10,6 +9,7 @@ import {
 	HoverCardContent,
 } from "./shared/ui/hover-card";
 import { Shortcut } from "./shared/ui/shortcut";
+import { ScrollArea } from "./shared/ui/scroll-area";
 
 function App() {
 	const hintMode = useHintMode();
@@ -22,7 +22,7 @@ function App() {
 	]);
 
 	return (
-		<div className="min-w-screen min-h-screen bg-background relative">
+		<ScrollArea className="w-screen h-screen bg-background">
 			<main className="max-w-3xl mx-auto p-4 flex flex-col gap-6 pb-16">
 				<Timer />
 				<Todos />
@@ -52,13 +52,13 @@ function App() {
 				{!hintMode && <Shortcut hint="Show hints">h</Shortcut>}
 				{hintMode && (
 					<>
-						<Shortcut hint="Delete todos">shift + d</Shortcut>
-						<Shortcut hint="Escape">ctrl + c</Shortcut>
+						<Shortcut hint="Delete todos">shift+d</Shortcut>
+						<Shortcut hint="Escape">ctrl+c</Shortcut>
 						<Shortcut hint="Hide hints">h</Shortcut>
 					</>
 				)}
 			</div>
-		</div>
+		</ScrollArea>
 	);
 }
 

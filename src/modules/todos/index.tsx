@@ -4,9 +4,10 @@ import {
 	ValueNoneIcon,
 	SewingPinIcon,
 	SewingPinFilledIcon,
+	DotsHorizontalIcon,
 } from "@radix-ui/react-icons";
 import * as E from "effect";
-import { forwardRef, useEffect, useRef, useState } from "react";
+import { Dispatch, forwardRef, SetStateAction, useEffect, useRef, useState } from "react";
 import { cast, NonEmptyString1000 } from "@evolu/react";
 
 import { Textarea } from "@/shared/ui/textarea";
@@ -39,7 +40,11 @@ import { Switch } from "@/shared/ui/switch";
 import { useAllTodos, useTodoActions } from "./db";
 import { Button } from "@/shared/ui/button";
 import { cn } from "@/shared/ui/util";
-
+import {
+	Popover,
+	PopoverAnchor,
+	PopoverContent
+} from "@/shared/ui/popover";
 export function Todos() {
 	const modal = useModal();
 	const hintMode = useHintMode();
@@ -179,6 +184,7 @@ export function Todos() {
 }
 
 type DeleteCategories = "all" | "completed";
+
 function AlertDialogDeleteTodo(props: {
 	todos: ReturnType<typeof useAllTodos>;
 	open: boolean;
@@ -255,6 +261,7 @@ function AddTodo() {
 	const modal = useModal();
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
 	const [withFocused, setWithFocused] = useState(false);
+	const [popoverOpen, setPopoverOpen] = useState(false)
 	const [active, setActive] = useState(false);
 	const { create } = useTodoActions();
 
@@ -292,6 +299,9 @@ function AddTodo() {
 	}
 
 	function toggleWithFocus() {
+		if (popoverOpen === false) {
+			setPopoverOpen(true)
+		}
 		setWithFocused((prev) => !prev);
 	}
 
@@ -328,22 +338,68 @@ function AddTodo() {
 				</TooltipContent>
 			</Tooltip>
 			<Tooltip open={hintMode && active}>
-				<TooltipTrigger className="h-4" tabIndex={-1}>
-					<Switch
-						disabled={modal === "focused"}
-						checked={withFocused}
-						onCheckedChange={setWithFocused}
-					/>
+				<TooltipTrigger asChild>
+					<Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+						<Button onClick={() => {
+							setPopoverOpen(true)
+						}}
+							size="icon" variant="outline" className="h-7 w-7">
+							<DotsHorizontalIcon />
+						</Button>
+						<PopoverAnchor />
+						<AddTodoPopover
+							withFocused={withFocused}
+							setWithFocused={setWithFocused}
+							closePopover={() => setPopoverOpen(false)}
+						/>
+					</Popover>
 				</TooltipTrigger>
 				<TooltipContent side="bottom">
 					<TooltipArrow />
 					<Shortcut hint={withFocused ? "without focus" : "with focus"}>
-						ctrl + f
+						ctrl+f
 					</Shortcut>
 				</TooltipContent>
 			</Tooltip>
-		</div>
+		</div >
 	);
+}
+
+function AddTodoPopover({
+	withFocused, setWithFocused, closePopover
+}: {
+	withFocused: boolean,
+	setWithFocused: Dispatch<SetStateAction<boolean>>
+	closePopover: () => void
+}) {
+
+	const hintMode = useHintMode();
+	const modal = useModal();
+
+	function toggleWithFocus() {
+		setWithFocused((prev) => !prev);
+	}
+
+	useHotkeys([
+		["f", toggleWithFocus],
+		["ctrl+c", closePopover]
+	])
+
+	return (
+		<PopoverContent>
+			<div className="flex items-center justify-between">
+				<p className="text-sm">Focused</p>
+				<Switch
+					disabled={modal === "focused"}
+					checked={withFocused}
+					onCheckedChange={setWithFocused}
+				/>
+			</div>
+		</PopoverContent>
+
+
+	)
+
 }
 
 function EmptyTodo() {
@@ -478,6 +534,10 @@ const TodoItem = forwardRef<
 		}
 	}
 
+	function cancel() {
+		setMode("view")
+	}
+
 	useHotkeys([
 		["d", () => executeIfActive(removeTodo)],
 		["x", () => executeIfActive(toggleCompleted)],
@@ -486,18 +546,7 @@ const TodoItem = forwardRef<
 		[`${index}`, () => focus()],
 	]);
 
-	useHotkeys(
-		[
-			[
-				"ctrl+c",
-				() =>
-					executeIfActive(() => {
-						setMode("view");
-					}),
-			],
-		],
-		[]
-	);
+	useHotkeys([["ctrl+c", cancel]], []);
 
 	return (
 		<a
